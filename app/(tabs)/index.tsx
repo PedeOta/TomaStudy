@@ -1,99 +1,196 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React from "react";
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-
-export default function HomeScreen() {
-  
+export default function App() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">TomaStudy!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <Image
+            source={{ uri: "https://i.imgur.com/6VBx3io.png" }} // imagem de perfil genérica
+            style={styles.avatar}
+          />
+          <View>
+            <Text style={styles.welcome}>Olá, Arthur!</Text>
+            <Text style={styles.subtitle}>Pronto pra iniciar sua jornada na programação?</Text>
+          </View>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        <View style={styles.statsRow}>
+          <View style={styles.statsItem}>
+            <Image
+              source={{ uri: "https://cdn-icons-png.flaticon.com/512/992/992703.png" }}
+              style={styles.iconSmall}
+            />
+            <Text style={styles.statsText}>0 XP</Text>
+          </View>
+
+          <View style={styles.statsItem}>
+            <Image
+              source={{ uri: "https://cdn-icons-png.flaticon.com/512/833/833472.png" }}
+              style={styles.iconSmall}
+            />
+            <Text style={styles.statsText}>5</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* MAIN */}
+      <ScrollView contentContainerStyle={styles.main}>
+        {/* HTML card */}
+        <View style={styles.card}>
+          <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
+        </View>
+
+        {/* Play button */}
+        <TouchableOpacity style={styles.playButton}>
+          <View style={styles.playCircle}>
+            <Text style={styles.playSymbol}>{'\u25B6'}</Text>
+          </View>
+          <Text style={styles.playText}>COMEÇAR</Text>
+        </TouchableOpacity>
+
+        {/* Locked lessons */}
+        <View style={styles.lockedGroup}>
+          <Image source={require("../../assets/images/js.png")} style={styles.iconLocked} />
+          <Image source={require("../../assets/images/python.png")} style={styles.iconLocked} />
+          <Image source={require("../../assets/images/css.png")} style={styles.iconLocked} />
+        </View>
+      </ScrollView>
+
+      {/* NAVBAR */}
+      <View style={styles.navbar}>
+        <Image source={require("../../assets/images/navbar.png")} style={styles.navIcons} />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+
+  // HEADER
+  header: {
+    paddingTop: 50,
+    paddingHorizontal: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  welcome: {
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  subtitle: {
+    fontSize: 12,
+    color: "#666",
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: -40,
+  },
+  statsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 15,
+  },
+  iconSmall: {
+    width: 18,
+    height: 18,
+    marginRight: 4,
+  },
+  statsText: {
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+
+  // MAIN
+  main: {
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 100,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    marginBottom: 20,
+    elevation: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  iconMain: {
+    width: 120,
+    height: 120,
+    resizeMode: "contain",
+  },
+
+  // PLAY BUTTON
+  playButton: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  playCircle: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#4CD964",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  playSymbol: {
+    color: "#fff",
+    fontSize: 30,
+    marginLeft: 4,
+  },
+  playText: {
+    marginTop: 6,
+    fontWeight: "bold",
+    color: "#4CD964",
+  },
+
+  // LOCKED LESSONS
+  lockedGroup: {
+    alignItems: "center",
+    marginTop: 10,
+  },
+  iconLocked: {
+    width: 120,
+    height: 120,
+    resizeMode: "contain",
+    opacity: 0.6,
+    marginVertical: 10,
+  },
+
+  // NAVBAR
+  navbar: {
+    borderTopWidth: 1,
+    borderColor: "#ddd",
+    alignItems: "center",
+    paddingVertical: 8,
+  },
+  navIcons: {
+    width: 300,
+    height: 60,
+    resizeMode: "contain",
   },
 });
