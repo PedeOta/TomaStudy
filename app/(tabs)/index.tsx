@@ -58,11 +58,6 @@ export default function App() {
           <Image source={require("../../assets/images/css.png")} style={styles.iconLocked} />
         </View>
       </ScrollView>
-
-      {/* NAVBAR */}
-      <View style={styles.navbar}>
-        <Image source={require("../../assets/images/navbar.png")} style={styles.navIcons} />
-      </View>
     </View>
   );
 }
@@ -181,16 +176,5 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 
-  // NAVBAR
-  navbar: {
-    borderTopWidth: 1,
-    borderColor: "#ddd",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  navIcons: {
-    width: 300,
-    height: 60,
-    resizeMode: "contain",
-  },
+  
 });
