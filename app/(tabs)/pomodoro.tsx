@@ -1,602 +1,491 @@
-// App.js
+// Load notifee dynamically to avoid runtime errors when running in Expo Go / non-ejected environments
+// We use eval('require') to avoid Metro statically resolving the native module at bundle time.
+const loadNotifee = () => {
+  try {
+    // eslint-disable-next-line no-eval, @typescript-eslint/no-implied-eval
+    const req: any = eval("require");
+    return req('@notifee/react-native');
+  } catch (e) {
+    return null;
+  }
+};
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Vibration,
-  View,
-} from "react-native";
+import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Vibration, View } from "react-native";
 
-import { Audio } from 'expo-av';
-import * as Haptics from 'expo-haptics';
+// (channel creation moved inside the component)
 
-// AsyncStorage is optional — if you want persistence install:
-// npm install @react-native-async-storage/async-storage
-let OptionalAsyncStorage: any = null;
-
-// Componente principal
 export default function App() {
-  // Valores iniciais padrão do Pomodoro
-  const [minutesInput, setMinutesInput] = useState("25");
-  const [secondsInput, setSecondsInput] = useState("00");
-  const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
-  // rest duration inputs
-  const [restMinutesInput, setRestMinutesInput] = useState("05");
-  const [restSecondsInput, setRestSecondsInput] = useState("00");
-  // interval ref (browser/node compatible)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [isInWorkPhase, setIsInWorkPhase] = useState(true);
-  const [currentCycle, setCurrentCycle] = useState(1);
-  const [totalCycles, setTotalCycles] = useState(4);
-
-  // Convert remainingSeconds to display mm:ss
-  const formatTime = (totalSec: number) => {
-    const m = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    const mm = String(m).padStart(2, "0");
-    const ss = String(s).padStart(2, "0");
-    return `${mm}:${ss}`;
-  };
-
-  // Start timer using current input values (or resume if paused)
-  const handleStart = () => {
-    // If already running, do nothing
-    if (isRunning) return;
-
-    // If there's no active remainingSeconds, initialize from inputs
-    let total = remainingSeconds;
-    if (total === null) {
-      if (isInWorkPhase) {
-        const m = parseInt(minutesInput || "0", 10) || 0;
-        let s = parseInt(secondsInput || "0", 10) || 0;
-        if (s > 59) s = 59; // clamp
-        total = m * 60 + s;
-      } else {
-        const rm = parseInt(restMinutesInput || "0", 10) || 0;
-        let rs = parseInt(restSecondsInput || "0", 10) || 0;
-        if (rs > 59) rs = 59;
-        total = rm * 60 + rs;
-      }
-      setRemainingSeconds(total);
-    }
-
-    if ((total ?? 0) <= 0) return; // nothing to run
-
-    setIsRunning(true);
-    // start interval loop
-    startInterval();
-  };
-
-  const handlePause = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current as any);
-      intervalRef.current = null;
-    }
-    setIsRunning(false);
-  };
-
-  const startInterval = () => {
-    if (intervalRef.current) return;
-    intervalRef.current = setInterval(() => {
-      setRemainingSeconds((prev) => {
-        if (prev === null) return null;
-        if (prev <= 1) {
-          // reached zero: clear this interval and handle phase end
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current as any);
-            intervalRef.current = null;
+  // criar canal Android somente quando o componente montar
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS === 'android') {
+        try {
+          const nf = loadNotifee();
+          if (nf && nf.createChannel) {
+            await nf.createChannel({
+              id: 'pomodoro',
+              name: 'Pomodoro',
+              importance: nf.AndroidImportance ? nf.AndroidImportance.HIGH : undefined,
+              vibration: true,
+              vibrationPattern: [0, 250, 250, 250],
+            });
           }
-          handlePhaseEnd();
-          return 0;
+        } catch (e) {
+          console.log('Erro ao criar canal de notificações (notifee):', e);
         }
-        return prev - 1;
-      });
-    }, 1000);
+      }
+    })();
+  }, []);
+
+  // ======= CONFIGURAÇÕES DO USUÁRIO =======
+  const [focusMinutes, setFocusMinutes] = useState("25");
+  const [focusSeconds, setFocusSeconds] = useState("0");
+  const [breakMinutes, setBreakMinutes] = useState("5");
+  const [breakSeconds, setBreakSeconds] = useState("0");
+  const [totalCycles, setTotalCycles] = useState("4");
+
+  // ======= ESTADOS INTERNOS =======
+  const [isRunning, setIsRunning] = useState(false);
+  const [isFocusTime, setIsFocusTime] = useState(true);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
+  const [currentCycle, setCurrentCycle] = useState(1);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const notificationIdRef = useRef<string | null>(null);
+
+  // ======= FUNÇÕES PRINCIPAIS =======
+
+  const startTimer = () => {
+    if (isRunning) return;
+    const seconds = getPhaseSeconds();
+    setRemainingSeconds(seconds);
+    setIsRunning(true);
   };
 
-  // Esta função gerencia a transição automática entre fases e o incremento do ciclo
-  const handlePhaseEnd = () => {
-    // Toca som/vibra para sinalizar o fim da fase
-    try { feedback(); } catch (e) {}
-
-    // Fim da fase de TRABALHO -> Inicia DESCANSO (mesmo ciclo)
-    if (isInWorkPhase) {
-      const rm = parseInt(restMinutesInput || "0", 10) || 0;
-      let rs = parseInt(restSecondsInput || "0", 10) || 0;
-      if (rs > 59) rs = 59;
-      const restTotal = rm * 60 + rs;
-
-      setIsInWorkPhase(false); // Transiciona para o descanso
-
-      if (restTotal > 0) {
-        setRemainingSeconds(restTotal);
-        startInterval(); // Inicia o timer de descanso automaticamente
-        setIsRunning(true);
-        return;
-      }
-      // Se restTotal for 0, o fluxo continua para a lógica de fim de descanso.
-    }
-
-    // Fim da fase de DESCANSO -> Inicia NOVO TRABALHO (próximo ciclo) ou PARA
-    if (!isInWorkPhase) {
-      const wm = parseInt(minutesInput || "0", 10) || 0;
-      let ws = parseInt(secondsInput || "0", 10) || 0;
-      if (ws > 59) ws = 59;
-      const workTotal = wm * 60 + ws;
-
-      // 1. Checa se o último ciclo terminou
-      if (currentCycle >= totalCycles) {
-        // Ciclos concluídos -> para
-        setIsRunning(false);
-        setRemainingSeconds(null);
-        setIsInWorkPhase(true);
-        setCurrentCycle(totalCycles);
-        return;
-      }
-
-      // 2. Inicia o próximo ciclo de trabalho
-      setCurrentCycle((c) => c + 1); // <--- ATUALIZA O CICLO AQUI
-      setIsInWorkPhase(true); // Volta para a fase de trabalho
-
-      if (workTotal > 0) {
-        setRemainingSeconds(workTotal);
-        startInterval(); // Inicia o timer de trabalho automaticamente
-        setIsRunning(true);
-        return;
-      }
-
-      // Se workTotal for 0, chama handlePhaseEnd novamente para verificar a condição de parada/próxima transição
-      setRemainingSeconds(null);
-      setIsRunning(false);
-      setTimeout(() => {
-        handlePhaseEnd(); 
-      }, 0);
-    }
-  };
-
-  const handleStop = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current as any);
-      intervalRef.current = null;
+  const pauseTimer = () => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
     }
     setIsRunning(false);
-    setRemainingSeconds(null);
-    setIsInWorkPhase(true);
+    // parar foreground service + cancelar notificação (se disponível)
+    try {
+      const nf = loadNotifee();
+      if (nf) {
+        nf.stopForegroundService && nf.stopForegroundService().catch(() => {});
+        nf.cancelNotification && nf.cancelNotification('pomodoro_notification').catch(() => {});
+      }
+    } catch (e) {}
+  };
+
+  const resetTimer = () => {
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+    }
+    setIsRunning(false);
+    setIsFocusTime(true);
+    setRemainingSeconds(0);
     setCurrentCycle(1);
+    // parar foreground service + cancelar notificação (se disponível)
+    try {
+      const nf = loadNotifee();
+      if (nf) {
+        nf.stopForegroundService && nf.stopForegroundService().catch(() => {});
+        nf.cancelNotification && nf.cancelNotification('pomodoro_notification').catch(() => {});
+      }
+    } catch (e) {}
   };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current as any);
-        intervalRef.current = null;
-      }
-    };
-  }, []);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [cyclesInput, setCyclesInput] = useState(String(totalCycles));
-
-  const pad = (v: string) => {
-    const n = parseInt(v || "0", 10) || 0;
-    return String(n).padStart(2, "0");
+  // Retorna segundos da fase atual (foco ou descanso)
+  const getPhaseSeconds = () => {
+    const min = isFocusTime ? parseInt(focusMinutes || "0", 10) : parseInt(breakMinutes || "0", 10);
+    const sec = isFocusTime ? parseInt(focusSeconds || "0", 10) : parseInt(breakSeconds || "0", 10);
+    return min * 60 + sec;
   };
 
-  // Sound reference
-  const [sound, setSound] = useState<Audio.Sound>();
+  // Avança para a próxima fase (foco → descanso ou descanso → foco)
+  const handlePhaseEnd = () => {
+    Vibration.vibrate(400);
 
-  // Load sound on component mount
-  useEffect(() => {
-    (async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-        });
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/sounds/timer-end.mp3')
-        );
-        setSound(sound);
-      } catch (e) {
-        console.log('Error loading sound:', e);
+    if (isFocusTime) {
+      // terminou o foco → vai pro descanso
+      setIsFocusTime(false);
+      const breakSecs = parseInt(breakMinutes || "0", 10) * 60 + parseInt(breakSeconds || "0", 10);
+      setRemainingSeconds(breakSecs);
+      setIsRunning(true); // continua rodando automaticamente
+    } else {
+      // terminou o descanso → verifica se acabou os ciclos
+      const totalCyclesNum = parseInt(totalCycles || "1", 10);
+      if (currentCycle >= totalCyclesNum) {
+        Vibration.vibrate([300, 200, 300]);
+        setIsRunning(false);
+        setRemainingSeconds(0);
+        setIsFocusTime(true);
+        setCurrentCycle(1);
+        // garantir que a notificação/foreground service seja parada (se disponível)
+        try {
+          const nf = loadNotifee();
+          if (nf) {
+            nf.stopForegroundService && nf.stopForegroundService().catch(() => {});
+            nf.cancelNotification && nf.cancelNotification('pomodoro_notification').catch(() => {});
+          }
+        } catch (e) {}
+        return;
       }
-    })();
-
-    // Cleanup sound on unmount
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, []);
-
-  // feedback helper (vibration + haptics + sound)
-  const feedback = async () => {
-    try {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (e) {}
-    try {
-      Vibration.vibrate(250);
-    } catch (e) {}
-    try {
-      if (sound) {
-        await sound.replayAsync(); 
-      }
-    } catch (e) {
-      console.log('Error playing sound:', e);
+      // inicia novo ciclo
+      const nextCycle = currentCycle + 1;
+      setCurrentCycle(nextCycle);
+      setIsFocusTime(true);
+      const focusSecs = parseInt(focusMinutes || "0", 10) * 60 + parseInt(focusSeconds || "0", 10);
+      setRemainingSeconds(focusSecs);
+      setIsRunning(true); // continua rodando automaticamente
     }
   };
 
-  // Load persisted settings (if AsyncStorage is installed)
+  // Controle do tempo em contagem regressiva
   useEffect(() => {
-    (async () => {
-      try {
-        // dynamic require so app doesn't crash if package isn't installed
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        OptionalAsyncStorage = AsyncStorage;
-        const m = await AsyncStorage.getItem('pom_minutes');
-        const s = await AsyncStorage.getItem('pom_seconds');
-        const rm = await AsyncStorage.getItem('pom_rest_minutes');
-        const rs = await AsyncStorage.getItem('pom_rest_seconds');
-        const cycles = await AsyncStorage.getItem('pom_cycles');
-        if (m !== null) setMinutesInput(m);
-        if (s !== null) setSecondsInput(s);
-        if (rm !== null) setRestMinutesInput(rm);
-        if (rs !== null) setRestSecondsInput(rs);
-        if (cycles !== null) setTotalCycles(parseInt(cycles, 10) || 4);
-      } catch (e) {
-        OptionalAsyncStorage = null;
+    if (isRunning) {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
       }
-    })();
-  }, []);
+      intervalRef.current = setInterval(() => {
+        setRemainingSeconds((prev) => {
+          if (prev <= 1) {
+            if (intervalRef.current !== null) {
+              clearInterval(intervalRef.current);
+            }
+            handlePhaseEnd();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isRunning, isFocusTime, focusMinutes, focusSeconds, breakMinutes, breakSeconds, totalCycles, currentCycle]);
 
-  // Persist settings when they change
+  // Notificação do timer ativo via Notifee (notificação fixa/updatable)
   useEffect(() => {
-    if (!OptionalAsyncStorage) return;
+    let mounted = true;
+    const notifId = 'pomodoro_notification';
+
     (async () => {
       try {
-        await OptionalAsyncStorage.setItem('pom_minutes', minutesInput);
-        await OptionalAsyncStorage.setItem('pom_seconds', secondsInput);
-        await OptionalAsyncStorage.setItem('pom_rest_minutes', restMinutesInput);
-        await OptionalAsyncStorage.setItem('pom_rest_seconds', restSecondsInput);
-        await OptionalAsyncStorage.setItem('pom_cycles', String(totalCycles));
+        if (isRunning && remainingSeconds > 0) {
+          const min = Math.floor(remainingSeconds / 60);
+          const sec = remainingSeconds % 60;
+          const timeDisplay = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+          const phase = isFocusTime ? "🎯 Foco" : "😎 Descanso";
+
+          // Display (or update) a persistent notification with the same id
+          const nf = loadNotifee();
+          if (nf && nf.displayNotification) {
+            await nf.displayNotification({
+              id: notifId,
+              title: phase,
+              body: `Tempo restante: ${timeDisplay}`,
+              android: {
+                channelId: 'pomodoro',
+                ongoing: true,
+                asForegroundService: true,
+                smallIcon: 'ic_stat_pomodoro', // requires icon in native resources
+              },
+            });
+
+            if (mounted) notificationIdRef.current = notifId;
+          }
+        } else {
+          // cancelar notificação quando não estiver rodando (se disponível)
+          const nf = loadNotifee();
+          if (nf && nf.cancelNotification) {
+            await nf.cancelNotification(notifId).catch(() => {});
+          }
+          notificationIdRef.current = null;
+        }
       } catch (e) {
-        // ignore
+        console.log('Erro ao mostrar/atualizar notificação (notifee):', e);
       }
     })();
-  }, [minutesInput, secondsInput, restMinutesInput, restSecondsInput, totalCycles]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [remainingSeconds, isRunning, isFocusTime]);
+
+  // ======= INTERFACE =======
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = remainingSeconds % 60;
 
   return (
     <View style={styles.container}>
-      {/* ---------------- CORPO PRINCIPAL ---------------- */}
-      <View style={styles.main}>
-        {/* Tomate e tempo */}
-        <View style={styles.tomatoContainer}>
+      {/* HEADER */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Pomodoro</Text>
+        <Text style={styles.phaseStatus}>
+          {isFocusTime ? "🎯 Foco" : "😎 Descanso"} • Ciclo {currentCycle}/{totalCycles}
+        </Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* DIAL COM TEMPO */}
+        <View style={styles.dialContainer}>
           <Image
-            source={require("./assets/pomodoro_dial.png")} 
-            style={styles.tomatoImage}
+            source={require("../../assets/images/pomodoro_dial.png")}
+            style={styles.dialImage}
           />
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {
-              // enter edit mode; pause timer so user can edit
-              handlePause();
-              setIsEditing(true);
-              // clear remainingSeconds so inputs show current values
-              setRemainingSeconds(null);
+              pauseTimer();
+              setRemainingSeconds(0);
             }}
-            // Style para preencher a área da imagem e capturar o clique
-            style={styles.timerTouchArea as any} 
+            style={styles.timerOverlay}
           >
             <Text style={styles.timerText}>
-              {remainingSeconds !== null
-                ? formatTime(remainingSeconds)
-                : isInWorkPhase
-                ? `${pad(minutesInput)}:${pad(secondsInput)}`
-                : `${pad(restMinutesInput)}:${pad(restSecondsInput)}`}
+              {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Status da fase */}
-        <View style={styles.phaseStatusContainer}>
-          <Text style={styles.phaseText}>
-            {isInWorkPhase ? "Foco" : "Descanso"}
-          </Text>
-          <Text style={styles.cycleText}>{`Ciclo ${currentCycle}/${totalCycles}`}</Text>
-        </View>
+        {/* CONFIGURAÇÕES */}
+        <View style={styles.settingsCard}>
+          <Text style={styles.settingsTitle}>Configurações</Text>
 
-        {/* Edit inputs (show when editing) */}
-        {isEditing && (
-          <View style={styles.inputsContainer}>
-            <Text style={styles.settingsTitle}>Configurações</Text>
-            
-            <Text style={styles.sectionTitle}>Tempo de Trabalho</Text>
-            <View style={styles.inputWrap}>
-              <Text style={styles.inputLabel}>Minutos</Text>
+          {/* Tempo de foco */}
+          <View style={styles.settingSection}>
+            <Text style={styles.settingLabel}>Tempo de foco</Text>
+            <View style={styles.timeInputRow}>
               <TextInput
-                value={minutesInput}
-                onChangeText={(t: string) => setMinutesInput(t.replace(/[^0-9]/g, ""))}
+                style={styles.timeInput}
+                value={focusMinutes}
+                onChangeText={setFocusMinutes}
                 keyboardType="numeric"
-                maxLength={3}
-                style={styles.input}
                 placeholder="25"
+                placeholderTextColor="#ccc"
               />
-            </View>
-
-            <View style={styles.inputWrap}>
-              <Text style={styles.inputLabel}>Segundos</Text>
+              <Text style={styles.timeSeparator}>:</Text>
               <TextInput
-                value={secondsInput}
-                onChangeText={(t: string) => setSecondsInput(t.replace(/[^0-9]/g, ""))}
+                style={styles.timeInput}
+                value={focusSeconds}
+                onChangeText={setFocusSeconds}
                 keyboardType="numeric"
-                maxLength={2}
-                style={styles.input}
                 placeholder="00"
-                onEndEditing={() => {
-                  const s = parseInt(secondsInput || "0", 10) || 0;
-                  if (s > 59) setSecondsInput("59");
-                }}
-              />
-            </View>
-
-            <Text style={styles.sectionTitle}>Tempo de Descanso</Text>
-            <View style={styles.inputWrap}>
-              <Text style={styles.inputLabel}>Minutos</Text>
-              <TextInput
-                value={restMinutesInput}
-                onChangeText={(t: string) => setRestMinutesInput(t.replace(/[^0-9]/g, ""))}
-                keyboardType="numeric"
-                maxLength={3}
-                style={styles.input}
-                placeholder="05"
-              />
-            </View>
-
-            <View style={styles.inputWrap}>
-              <Text style={styles.inputLabel}>Segundos</Text>
-              <TextInput
-                value={restSecondsInput}
-                onChangeText={(t: string) => setRestSecondsInput(t.replace(/[^0-9]/g, ""))}
-                keyboardType="numeric"
+                placeholderTextColor="#ccc"
                 maxLength={2}
-                style={styles.input}
-                placeholder="00"
-                onEndEditing={() => {
-                  const s = parseInt(restSecondsInput || "0", 10) || 0;
-                  if (s > 59) setRestSecondsInput("59");
-                }}
               />
             </View>
-
-            <Text style={styles.sectionTitle}>Ciclos</Text>
-            <View style={styles.inputWrap}>
-              <Text style={styles.inputLabel}>Número de ciclos</Text>
-              <TextInput
-                value={cyclesInput}
-                onChangeText={(t: string) => setCyclesInput(t.replace(/[^0-9]/g, ""))}
-                keyboardType="numeric"
-                maxLength={3}
-                style={styles.input}
-                placeholder="4"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={styles.okButton}
-              onPress={() => {
-                const parsed = parseInt(cyclesInput || "0", 10) || 1;
-                const clamped = parsed < 1 ? 1 : parsed;
-                setTotalCycles(clamped);
-                setIsEditing(false);
-              }}
-            >
-              <Text style={styles.okText}>Confirmar</Text>
-            </TouchableOpacity>
           </View>
-        )}
 
-        {/* Botões */}
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={isRunning ? handleStop : handleStart}>
-            <Text style={styles.buttonText}>{isRunning ? "PARAR" : "INICIAR"}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handlePause}>
-            <Text style={styles.buttonText}>PAUSAR</Text>
+          {/* Tempo de descanso */}
+          <View style={styles.settingSection}>
+            <Text style={styles.settingLabel}>Tempo de descanso</Text>
+            <View style={styles.timeInputRow}>
+              <TextInput
+                style={styles.timeInput}
+                value={breakMinutes}
+                onChangeText={setBreakMinutes}
+                keyboardType="numeric"
+                placeholder="05"
+                placeholderTextColor="#ccc"
+              />
+              <Text style={styles.timeSeparator}>:</Text>
+              <TextInput
+                style={styles.timeInput}
+                value={breakSeconds}
+                onChangeText={setBreakSeconds}
+                keyboardType="numeric"
+                placeholder="00"
+                placeholderTextColor="#ccc"
+                maxLength={2}
+              />
+            </View>
+          </View>
+
+          {/* Ciclos */}
+          <View style={styles.settingSection}>
+            <Text style={styles.settingLabel}>Número de ciclos</Text>
+            <TextInput
+              style={styles.cyclesInput}
+              value={totalCycles}
+              onChangeText={setTotalCycles}
+              keyboardType="numeric"
+              placeholder="4"
+              placeholderTextColor="#ccc"
+            />
+          </View>
+        </View>
+
+        {/* BOTÕES DE CONTROLE */}
+        <View style={styles.buttons}>
+          {!isRunning ? (
+            <TouchableOpacity onPress={startTimer} style={[styles.button, styles.startButton]}>
+              <Text style={styles.buttonText}>▶ INICIAR</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={pauseTimer} style={[styles.button, styles.pauseButton]}>
+              <Text style={styles.buttonText}>⏸ PAUSAR</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={resetTimer} style={[styles.button, styles.resetButton]}>
+            <Text style={styles.buttonText}>↻ RESETAR</Text>
           </TouchableOpacity>
         </View>
-        {/* Definir ciclos (abre edição) */}
-        <TouchableOpacity
-          style={styles.defineButton}
-          onPress={() => {
-            handlePause();
-            setIsEditing(true);
-            setCyclesInput(String(totalCycles));
-          }}
-        >
-          <Text style={styles.defineText}>Definir tempos/ciclos</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 }
 
-// ---------------- ESTILOS ----------------
+// ======= ESTILOS =======
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f9f9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  // CORPO PRINCIPAL
-  main: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
+    backgroundColor: "#fff",
     paddingTop: 50,
-    paddingBottom: 50,
-    width: '100%',
   },
-  tomatoContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    width: 250,
-    height: 250,
-    marginTop: 20,
-    marginBottom: 20,
+  header: {
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
-  tomatoImage: {
-    width: '100%', 
-    height: '100%', 
-    resizeMode: 'contain',
-  },
-  timerTouchArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timerText: {
-    position: "absolute",
-    color: "#000", // Cor preta para o tempo
-    fontSize: 42,
-    fontWeight: "800",
-    textAlign: 'center',
-    // Posição ajustada para centralizar o texto dentro da imagem do dial
-    top: '47%', 
-    transform: [{ translateY: -21 }],
-  },
-  phaseStatusContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  phaseText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#4a4a4a",
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 5,
   },
-  cycleText: {
+  phaseStatus: {
     fontSize: 16,
-    color: "#777",
+    color: "#666",
+    marginBottom: 5,
   },
-  buttonsContainer: {
-    flexDirection: "row",
-    marginTop: 40,
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 40,
   },
-  button: {
-    backgroundColor: "#fff",
-    borderRadius: 30,
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    marginHorizontal: 16,
-    elevation: 6,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+
+  // DIAL COM TEMPO
+  dialContainer: {
+    alignItems: "center",
+    marginBottom: 40,
+    position: "relative",
   },
-  buttonText: {
+  dialImage: {
+    width: 240,
+    height: 240,
+    resizeMode: "contain",
+  },
+  timerOverlay: {
+    position: "absolute",
+    width: 240,
+    height: 240,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  timerText: {
+    fontSize: 64,
+    fontWeight: "300",
+    color: "#fff",
+  },
+
+  // SETTINGS CARD
+  settingsCard: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  settingsTitle: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#333",
-  },
-  inputsContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginTop: 20,
-    width: '90%',
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-  },
-  inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginVertical: 8,
-  },
-  inputLabel: {
-    fontSize: 16,
-    color: "#666",
-    flex: 1,
-  },
-  input: {
-    width: 80,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: "#f5f5f5",
+    marginBottom: 20,
     textAlign: "center",
-    fontSize: 18,
-    padding: 0,
-    marginLeft: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
   },
-  okButton: {
-    backgroundColor: "#4CAF50",
-    marginTop: 25,
-    paddingHorizontal: 30,
-    paddingVertical: 14,
-    borderRadius: 15,
-    alignSelf: 'center',
-    elevation: 5,
-    shadowColor: "#4CAF50",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-  },
-  okText: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  settingsTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#333",
+  settingSection: {
     marginBottom: 18,
-    textAlign: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    paddingBottom: 10,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#4a4a4a",
-    marginTop: 15,
-    marginBottom: 10,
-  },
-  defineButton: {
-    marginTop: 15,
-    backgroundColor: "#f0f0f0",
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  defineText: {
-    fontSize: 15,
+  settingLabel: {
+    fontSize: 14,
     fontWeight: "600",
     color: "#555",
+    marginBottom: 8,
+  },
+  timeInputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  timeInput: {
+    width: 70,
+    height: 44,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    color: "#333",
+  },
+  timeSeparator: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  cyclesInput: {
+    width: 100,
+    height: 44,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 12,
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+    color: "#333",
+    alignSelf: "center",
+  },
+
+  // BUTTONS
+  buttons: {
+    flexDirection: "row",
+    gap: 12,
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  button: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 140,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  startButton: {
+    backgroundColor: "#4CAF50",
+  },
+  pauseButton: {
+    backgroundColor: "#ff6b6b",
+  },
+  resetButton: {
+    backgroundColor: "#999",
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
+    textAlign: "center",
   },
 });
