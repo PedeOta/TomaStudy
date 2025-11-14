@@ -1,19 +1,21 @@
-import React from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from "react-native";
+import { useTheme } from '@/hooks/theme-context';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function App() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* HEADER */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.bg }]}>
         <View style={styles.headerTop}>
           <Image
             source={{ uri: "https://i.imgur.com/6VBx3io.png" }} // imagem de perfil genérica
             style={styles.avatar}
           />
           <View>
-            <Text style={styles.welcome}>Olá, Arthur!</Text>
-            <Text style={styles.subtitle}>Pronto pra iniciar sua jornada na programação?</Text>
+            <Text style={[styles.welcome, { color: colors.text }]}>Olá, Arthur!</Text>
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Pronto pra iniciar sua jornada na programação?</Text>
           </View>
         </View>
 
@@ -23,7 +25,7 @@ export default function App() {
               source={{ uri: "https://cdn-icons-png.flaticon.com/512/992/992703.png" }}
               style={styles.iconSmall}
             />
-            <Text style={styles.statsText}>0 XP</Text>
+            <Text style={[styles.statsText, { color: colors.text }]}>0 XP</Text>
           </View>
 
           <View style={styles.statsItem}>
@@ -31,7 +33,7 @@ export default function App() {
               source={{ uri: "https://cdn-icons-png.flaticon.com/512/833/833472.png" }}
               style={styles.iconSmall}
             />
-            <Text style={styles.statsText}>5</Text>
+            <Text style={[styles.statsText, { color: colors.text }]}>5</Text>
           </View>
         </View>
       </View>
@@ -39,7 +41,7 @@ export default function App() {
       {/* MAIN */}
       <ScrollView contentContainerStyle={styles.main}>
         {/* HTML card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
         </View>
 

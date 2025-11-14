@@ -9,7 +9,10 @@ const loadNotifee = () => {
     return null;
   }
 };
-import React, { useEffect, useRef, useState } from "react";
+import { useTheme } from '@/hooks/theme-context';
+import * as Notifications from 'expo-notifications';
+import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from "react";
 import { Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, Vibration, View } from "react-native";
 
 // (channel creation moved inside the component)
@@ -29,6 +32,18 @@ export default function App() {
               vibration: true,
               vibrationPattern: [0, 250, 250, 250],
             });
+          }
+          else {
+            // fallback: create channel using expo-notifications when notifee isn't available
+            try {
+              await Notifications.setNotificationChannelAsync('pomodoro', {
+                name: 'Pomodoro',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+              });
+            } catch (e) {
+              // ignore
+            }
           }
         } catch (e) {
           console.log('Erro ao criar canal de notificações (notifee):', e);
@@ -73,6 +88,13 @@ export default function App() {
         nf.stopForegroundService && nf.stopForegroundService().catch(() => {});
         nf.cancelNotification && nf.cancelNotification('pomodoro_notification').catch(() => {});
       }
+      // fallback: dismiss expo notification if used
+      if (notificationIdRef.current) {
+        try {
+          Notifications.dismissNotificationAsync(notificationIdRef.current).catch(() => {});
+        } catch (e) {}
+        notificationIdRef.current = null;
+      }
     } catch (e) {}
   };
 
@@ -90,6 +112,13 @@ export default function App() {
       if (nf) {
         nf.stopForegroundService && nf.stopForegroundService().catch(() => {});
         nf.cancelNotification && nf.cancelNotification('pomodoro_notification').catch(() => {});
+      }
+      // fallback: dismiss expo notification if used
+      if (notificationIdRef.current) {
+        try {
+          Notifications.dismissNotificationAsync(notificationIdRef.current).catch(() => {});
+        } catch (e) {}
+        notificationIdRef.current = null;
       }
     } catch (e) {}
   };
@@ -176,7 +205,7 @@ export default function App() {
         if (isRunning && remainingSeconds > 0) {
           const min = Math.floor(remainingSeconds / 60);
           const sec = remainingSeconds % 60;
-          const timeDisplay = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+            const timeDisplay = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
           const phase = isFocusTime ? "🎯 Foco" : "😎 Descanso";
 
           // Display (or update) a persistent notification with the same id
@@ -195,12 +224,44 @@ export default function App() {
             });
 
             if (mounted) notificationIdRef.current = notifId;
+          } else {
+            // Fallback: use expo-notifications when notifee isn't present (Expo Go / non-ejected)
+            try {
+              // dismiss previous expo notification (if any) to avoid duplicates
+              if (notificationIdRef.current) {
+                await Notifications.dismissNotificationAsync(notificationIdRef.current).catch(() => {});
+              }
+
+              const expoId = await Notifications.scheduleNotificationAsync({
+                content: {
+                  title: phase,
+                  body: `Tempo restante: ${timeDisplay}`,
+                  data: { pomodoro: true },
+                  android: {
+                    channelId: 'pomodoro',
+                    // sticky/ongoing isn't supported uniformly; we set importance and keep re-presenting to simulate update
+                    importance: Notifications.AndroidImportance.MAX,
+                  },
+                },
+                trigger: null,
+              });
+
+              if (mounted) notificationIdRef.current = expoId;
+            } catch (e) {
+              // ignore expo fallback errors
+            }
           }
         } else {
           // cancelar notificação quando não estiver rodando (se disponível)
           const nf = loadNotifee();
           if (nf && nf.cancelNotification) {
             await nf.cancelNotification(notifId).catch(() => {});
+          }
+          // fallback: dismiss expo notification
+          if (notificationIdRef.current) {
+            try {
+              await Notifications.dismissNotificationAsync(notificationIdRef.current).catch(() => {});
+            } catch (e) {}
           }
           notificationIdRef.current = null;
         }
@@ -217,13 +278,15 @@ export default function App() {
   // ======= INTERFACE =======
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = remainingSeconds % 60;
+  const router = useRouter();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* HEADER */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Pomodoro</Text>
-        <Text style={styles.phaseStatus}>
+      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Pomodoro</Text>
+        <Text style={[styles.phaseStatus, { color: colors.secondaryText }]}>
           {isFocusTime ? "🎯 Foco" : "😎 Descanso"} • Ciclo {currentCycle}/{totalCycles}
         </Text>
       </View>
@@ -250,29 +313,29 @@ export default function App() {
         </View>
 
         {/* CONFIGURAÇÕES */}
-        <View style={styles.settingsCard}>
-          <Text style={styles.settingsTitle}>Configurações</Text>
+        <View style={[styles.settingsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.settingsTitle, { color: colors.text }]}>Configurações</Text>
 
           {/* Tempo de foco */}
           <View style={styles.settingSection}>
-            <Text style={styles.settingLabel}>Tempo de foco</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>Tempo de foco</Text>
             <View style={styles.timeInputRow}>
               <TextInput
-                style={styles.timeInput}
+                style={[styles.timeInput, { backgroundColor: colors.header, color: colors.text, borderColor: colors.border }]}
                 value={focusMinutes}
                 onChangeText={setFocusMinutes}
                 keyboardType="numeric"
                 placeholder="25"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={colors.secondaryText}
               />
-              <Text style={styles.timeSeparator}>:</Text>
+              <Text style={[styles.timeSeparator, { color: colors.text }]}>:</Text>
               <TextInput
-                style={styles.timeInput}
+                style={[styles.timeInput, { backgroundColor: colors.header, color: colors.text, borderColor: colors.border }]}
                 value={focusSeconds}
                 onChangeText={setFocusSeconds}
                 keyboardType="numeric"
                 placeholder="00"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={colors.secondaryText}
                 maxLength={2}
               />
             </View>
@@ -280,24 +343,24 @@ export default function App() {
 
           {/* Tempo de descanso */}
           <View style={styles.settingSection}>
-            <Text style={styles.settingLabel}>Tempo de descanso</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>Tempo de descanso</Text>
             <View style={styles.timeInputRow}>
               <TextInput
-                style={styles.timeInput}
+                style={[styles.timeInput, { backgroundColor: colors.header, color: colors.text, borderColor: colors.border }]}
                 value={breakMinutes}
                 onChangeText={setBreakMinutes}
                 keyboardType="numeric"
                 placeholder="05"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={colors.secondaryText}
               />
-              <Text style={styles.timeSeparator}>:</Text>
+              <Text style={[styles.timeSeparator, { color: colors.text }]}>:</Text>
               <TextInput
-                style={styles.timeInput}
+                style={[styles.timeInput, { backgroundColor: colors.header, color: colors.text, borderColor: colors.border }]}
                 value={breakSeconds}
                 onChangeText={setBreakSeconds}
                 keyboardType="numeric"
                 placeholder="00"
-                placeholderTextColor="#ccc"
+                placeholderTextColor={colors.secondaryText}
                 maxLength={2}
               />
             </View>
@@ -305,14 +368,14 @@ export default function App() {
 
           {/* Ciclos */}
           <View style={styles.settingSection}>
-            <Text style={styles.settingLabel}>Número de ciclos</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>Número de ciclos</Text>
             <TextInput
-              style={styles.cyclesInput}
+              style={[styles.cyclesInput, { backgroundColor: colors.header, color: colors.text, borderColor: colors.border }]}
               value={totalCycles}
               onChangeText={setTotalCycles}
               keyboardType="numeric"
               placeholder="4"
-              placeholderTextColor="#ccc"
+              placeholderTextColor={colors.secondaryText}
             />
           </View>
         </View>
@@ -320,7 +383,13 @@ export default function App() {
         {/* BOTÕES DE CONTROLE */}
         <View style={styles.buttons}>
           {!isRunning ? (
-            <TouchableOpacity onPress={startTimer} style={[styles.button, styles.startButton]}>
+            <TouchableOpacity
+              onPress={() => {
+                // navegar para a tela de trilhas
+                try { router.push('/trilhas'); } catch (e) { /* ignore */ }
+              }}
+              style={[styles.button, styles.startButton]}
+            >
               <Text style={styles.buttonText}>▶ INICIAR</Text>
             </TouchableOpacity>
           ) : (
