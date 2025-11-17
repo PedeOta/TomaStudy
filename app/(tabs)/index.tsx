@@ -40,24 +40,40 @@ export default function App() {
 
       {/* MAIN */}
       <ScrollView contentContainerStyle={styles.main}>
-        {/* HTML card */}
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
+        {/* HTML card with Play button overlay - LEFT */}
+        <View style={[styles.cardRow, { justifyContent: 'flex-start' }]}>
+          <View style={styles.cardWithButton}>
+            <View style={[styles.card, { backgroundColor: colors.card }]}>
+              <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
+            </View>
+            {/* Play button overlay */}
+            <TouchableOpacity style={styles.playButtonOverlay}>
+              <View style={styles.playCircle}>
+                <Text style={styles.playSymbol}>{'\u25B6'}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Play button */}
-        <TouchableOpacity style={styles.playButton}>
-          <View style={styles.playCircle}>
-            <Text style={styles.playSymbol}>{'\u25B6'}</Text>
+        {/* JS card - RIGHT */}
+        <View style={[styles.cardRow, { justifyContent: 'flex-end' }]}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <Image source={require("../../assets/images/js.png")} style={styles.iconMain} />
           </View>
-          <Text style={styles.playText}>COMEÇAR</Text>
-        </TouchableOpacity>
+        </View>
 
-        {/* Locked lessons */}
-        <View style={styles.lockedGroup}>
-          <Image source={require("../../assets/images/js.png")} style={styles.iconLocked} />
-          <Image source={require("../../assets/images/python.png")} style={styles.iconLocked} />
-          <Image source={require("../../assets/images/css.png")} style={styles.iconLocked} />
+        {/* Python card - LEFT */}
+        <View style={[styles.cardRow, { justifyContent: 'flex-start' }]}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <Image source={require("../../assets/images/python.png")} style={styles.iconMain} />
+          </View>
+        </View>
+
+        {/* CSS card - RIGHT */}
+        <View style={[styles.cardRow, { justifyContent: 'flex-end' }]}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <Image source={require("../../assets/images/css.png")} style={styles.iconMain} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -74,6 +90,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
+    zIndex: 100,
   },
   headerTop: {
     flexDirection: "row",
@@ -115,8 +132,16 @@ const styles = StyleSheet.create({
 
   // MAIN
   main: {
-    alignItems: "center",
     paddingVertical: 20,
+  },
+  cardRow: {
+    width: "100%",
+    paddingHorizontal: 20,
+    marginVertical: 12,
+    flexDirection: "row",
+  },
+  cardWithButton: {
+    position: "relative",
   },
   card: {
     backgroundColor: "#fff",
@@ -125,23 +150,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    marginBottom: 20,
     elevation: 3,
     alignItems: "center",
     justifyContent: "center",
     padding: 10,
+    width: 140,
+    height: 140,
   },
   iconMain: {
     width: 120,
     height: 120,
     resizeMode: "contain",
   },
-
-  // PLAY BUTTON
-  playButton: {
-    alignItems: "center",
-    marginBottom: 20,
+  playButtonOverlay: {
+    position: "absolute",
+    bottom: -10,
+    right: -10,
+    zIndex: 10,
   },
+
+  // PLAY BUTTON (agora é overlay)
   playCircle: {
     width: 70,
     height: 70,
@@ -159,24 +187,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginLeft: 4,
   },
-  playText: {
-    marginTop: 6,
-    fontWeight: "bold",
-    color: "#4CD964",
-  },
 
-  // LOCKED LESSONS
-  lockedGroup: {
-    alignItems: "center",
-    marginTop: 10,
-  },
-  iconLocked: {
-    width: 120,
-    height: 120,
-    resizeMode: "contain",
-    opacity: 0.6,
-    marginVertical: 10,
-  },
-
+  // LOCKED LESSONS - Removido
   
 });
