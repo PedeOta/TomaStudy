@@ -384,10 +384,7 @@ export default function App() {
         <View style={styles.buttons}>
           {!isRunning ? (
             <TouchableOpacity
-              onPress={() => {
-                // navegar para a tela de trilhas
-                try { router.push('/trilhas'); } catch (e) { /* ignore */ }
-              }}
+              onPress={startTimer}
               style={[styles.button, styles.startButton]}
             >
               <Text style={styles.buttonText}>▶ INICIAR</Text>

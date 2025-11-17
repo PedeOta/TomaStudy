@@ -1,8 +1,10 @@
 import { useTheme } from '@/hooks/theme-context';
+import { useRouter } from 'expo-router';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function App() {
   const { colors } = useTheme();
+  const router = useRouter();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -47,7 +49,7 @@ export default function App() {
               <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
             </View>
             {/* Play button overlay */}
-            <TouchableOpacity style={styles.playButtonOverlay}>
+            <TouchableOpacity style={styles.playButtonOverlay} onPress={() => router.push('/html-miniboss')}>
               <View style={styles.playCircle}>
                 <Text style={styles.playSymbol}>{'\u25B6'}</Text>
               </View>
