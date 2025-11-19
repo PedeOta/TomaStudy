@@ -4,39 +4,19 @@ import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SLIDES = [
-  {
-    id: 1,
-    progress: 10,
-    bubble: 'HTML significa "HyperText Markup Language"',
-    contentType: 'text',
-  },
+  { id: 1, progress: 10, bubble: 'HTML significa "HyperText Markup Language"', contentType: 'text' },
   {
     id: 2,
     progress: 20,
-    bubble: '<!DOCTYPE html> diz que é um documento HTML.\n<html> envolve todo o conteúdo.\n<head> Informações sobre a página (não aparecem).\n<body> o que aparece na tela.',
+    bubble:
+      '<!DOCTYPE html> diz que é um documento HTML.\n<html> envolve todo o conteúdo.\n<head> Informações sobre a página (não aparecem).\n<body> o que aparece na tela.',
     contentType: 'code',
-    code: '<!DOCTYPE html>\n<html>\n  <head>\n    <title>Minha Primeira Página</title>\n  </head>\n  <body>\n    <h1>Olá, mundo!</h1>\n    <p>Esse é meu primeiro parágrafo.</p>\n  </body>\n</html>'
+    code:
+      '<!DOCTYPE html>\n<html>\n  <head>\n    <title>Minha Primeira Página</title>\n  </head>\n  <body>\n    <h1>Olá, mundo!</h1>\n    <p>Esse é meu primeiro parágrafo.</p>\n  </body>\n</html>',
   },
-  {
-    id: 3,
-    progress: 30,
-    bubble: 'Vamos agora falar um pouco sobre as tags mais comuns, como títulos, imagens, listas links e parágrafos.',
-    contentType: 'text',
-  },
-  {
-    id: 4,
-    progress: 45,
-    bubble: 'A tag <h1></h1> é usada para títulos. Quanto menor o número da tag (h1, h2, h3, h4, h5, h6) menor será a fonte do título.',
-    contentType: 'code',
-    code: '<h1>lorem ipsum</h1>\n<h6>lorem ipsum</h6>',
-  },
-  {
-    id: 5,
-    progress: 55,
-    bubble: '<img>: Mostra uma imagem na página.\nsrc: é o endereço da imagem.\nalt: texto alternativo da imagem.',
-    contentType: 'code',
-    code: '<img src="caminho.jpg" alt="Descrição da imagem">',
-  },
+  { id: 3, progress: 30, bubble: 'Vamos agora falar um pouco sobre as tags mais comuns, como títulos, imagens, listas links e parágrafos.', contentType: 'text' },
+  { id: 4, progress: 45, bubble: 'A tag <h1></h1> é usada para títulos. Quanto menor o número da tag (h1, h2, h3, h4, h5, h6) menor será a fonte do título.', contentType: 'code', code: '<h1>lorem ipsum</h1>\n<h6>lorem ipsum</h6>' },
+  { id: 5, progress: 55, bubble: '<img>: Mostra uma imagem na página.\nsrc: é o endereço da imagem.\nalt: texto alternativo da imagem.', contentType: 'code', code: '<img src="caminho.jpg" alt="Descrição da imagem">' },
   {
     id: 6,
     progress: 60,
@@ -55,79 +35,18 @@ const SLIDES = [
       },
     ],
   },
-  {
-    id: 7,
-    progress: 80,
-    bubble: 'href: endereço de um link.\nO texto dentro de <a> aparece clicável.',
-    contentType: 'code',
-    code: '<a href="https://google.com">Ir para o Google</a>',
-  },
-  {
-    id: 8,
-    progress: 90,
-    bubble: 'A tag <p> é usada para criar parágrafos.',
-    contentType: 'code',
-    code: '<p>Lorem ipsum dolor sit amet...</p>',
-  },
-  {
-    id: 9,
-    progress: 100,
-    bubble: 'Agora prove seu conhecimento enfrentando o MiniBoss HTML!',
-    contentType: 'text',
-  },
+  { id: 7, progress: 80, bubble: 'href: endereço de um link.\nO texto dentro de <a> aparece clicável.', contentType: 'code', code: '<a href="https://google.com">Ir para o Google</a>' },
+  { id: 8, progress: 90, bubble: 'A tag <p> é usada para criar parágrafos.', contentType: 'code', code: '<p>Lorem ipsum dolor sit amet...</p>' },
+  { id: 9, progress: 100, bubble: 'Agora prove seu conhecimento enfrentando o MiniBoss HTML!', contentType: 'text' },
 ];
 
 const QUIZ_QUESTIONS = [
-  {
-    id: 1,
-    question: 'O que significa HTML?',
-    options: [
-      { text: 'Uma linguagem de programação', correct: false },
-      { text: 'HyperText Markup Language', correct: true },
-      { text: 'Uma ferramenta de design', correct: false },
-      { text: 'Um banco de dados', correct: false },
-    ],
-  },
-  {
-    id: 2,
-    question: 'Qual tag cria um parágrafo?',
-    options: [
-      { text: '<p>', correct: true },
-      { text: '<text>', correct: false },
-      { text: '<pg>', correct: false },
-      { text: '<paragraph>', correct: false },
-    ],
-  },
-  {
-    id: 3,
-    question: 'Qual destas tags exibe uma imagem?',
-    options: [
-      { text: '<img>', correct: true },
-      { text: '<image>', correct: false },
-      { text: '<picture>', correct: false },
-      { text: '<src>', correct: false },
-    ],
-  },
-  {
-    id: 4,
-    question: 'Qual atributo define o link de <a>?',
-    options: [
-      { text: 'ref', correct: false },
-      { text: 'url', correct: false },
-      { text: 'href', correct: true },
-      { text: 'link', correct: false },
-    ],
-  },
-  {
-    id: 5,
-    question: 'Qual tag representa o maior título?',
-    options: [
-      { text: '<h1>', correct: true },
-      { text: '<h6>', correct: false },
-      { text: '<title>', correct: false },
-      { text: '<header>', correct: false },
-    ],
-  },
+  { id: 1, question: 'O que significa HTML?', options: [{ text: 'Uma linguagem de programação', correct: false }, { text: 'HyperText Markup Language', correct: true }, { text: 'Uma ferramenta de design', correct: false }, { text: 'Um banco de dados', correct: false }] },
+  { id: 2, question: 'Qual tag cria um parágrafo?', options: [{ text: '<p>', correct: true }, { text: '<text>', correct: false }, { text: '<pg>', correct: false }, { text: '<paragraph>', correct: false }] },
+  { id: 3, question: 'Qual destas tags exibe uma imagem?', options: [{ text: '<img>', correct: true }, { text: '<image>', correct: false }, { text: '<picture>', correct: false }, { text: '<src>', correct: false }] },
+  { id: 4, question: 'Qual atributo define o link de <a>?', options: [{ text: 'ref', correct: false }, { text: 'url', correct: false }, { text: 'href', correct: true }, { text: 'link', correct: false }] },
+  { id: 5, question: 'Qual tag representa o maior título?', options: [{ text: '<h1>', correct: true }, { text: '<h6>', correct: false }, { text: '<title>', correct: false }, { text: '<header>', correct: false }] },
+  { id: 6, question: 'Qual a tag utilizada para gerar uma lista não ordenada e uma lista ordenada em HTML, nessa ordem?', options: [{ text: '<ul> e <ol>', correct: true }, { text: '<ol> e <ul>', correct: false }, { text: '<list> e <list-ord>', correct: false }, { text: '<ul> e <list>', correct: false }] },
 ];
 
 export default function HtmlMiniBoss() {
@@ -141,8 +60,41 @@ export default function HtmlMiniBoss() {
   const [bossHealth, setBossHealth] = useState<number>(100);
   const [playerLives, setPlayerLives] = useState<number>(5);
 
+  // Novos contadores para ativar telas de vitória/derrota
+  const [correctCount, setCorrectCount] = useState<number>(0);
+  const [wrongCount, setWrongCount] = useState<number>(0);
+
+  // Controle interno de telas (já que você escolheu opção B)
+  const [showVictoryScreen, setShowVictoryScreen] = useState<boolean>(false);
+  const [showDefeatScreen, setShowDefeatScreen] = useState<boolean>(false);
+
   const currentSlide = SLIDES[step];
   const currentQuestion = QUIZ_QUESTIONS[quizStep];
+
+  const resetQuizState = () => {
+    setStep(0);
+    setShowQuiz(false);
+    setSelectedAnswer(null);
+    setQuizStep(0);
+    setBossHealth(100);
+    setPlayerLives(5);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setShowVictoryScreen(false);
+    setShowDefeatScreen(false);
+  };
+
+  const restartQuizFromDefeat = () => {
+    // reinicia apenas o quiz (mantém tela atual do app)
+    setShowQuiz(true);
+    setQuizStep(0);
+    setBossHealth(100);
+    setPlayerLives(5);
+    setCorrectCount(0);
+    setWrongCount(0);
+    setSelectedAnswer(null);
+    setShowDefeatScreen(false);
+  };
 
   const handleContinue = () => {
     if (step < SLIDES.length - 1) setStep(step + 1);
@@ -155,44 +107,137 @@ export default function HtmlMiniBoss() {
     const isCorrect = currentQuestion.options[selectedAnswer].correct;
 
     if (isCorrect) {
+      // acerto
       const newBossHealth = Math.max(0, bossHealth - 20);
       setBossHealth(newBossHealth);
-      if (newBossHealth <= 0) {
-        router.push('/');
+
+      const newCorrect = correctCount + 1;
+      setCorrectCount(newCorrect);
+
+      // Verifica condição de vitória por contagem
+      if (newCorrect >= 5 || newBossHealth <= 0) {
+        // abre tela de vitória
+        setShowVictoryScreen(true);
+        setShowQuiz(false);
         return;
       }
     } else {
+      // erro
       const newLives = Math.max(0, playerLives - 1);
       setPlayerLives(newLives);
-      if (newLives <= 0) {
-        router.push('/');
+
+      const newWrong = wrongCount + 1;
+      setWrongCount(newWrong);
+
+      // Verifica condição de derrota por contagem
+      if (newWrong >= 5 || newLives <= 0) {
+        setShowDefeatScreen(true);
+        setShowQuiz(false);
         return;
       }
     }
 
+    // prepara próxima pergunta
     setSelectedAnswer(null);
 
-    // Evita estourar o array → CORREÇÃO DO SEU ERRO
     if (quizStep + 1 >= QUIZ_QUESTIONS.length) {
-      router.push('/');
+      // acabou as perguntas — considerar vitória se player tiver mais acertos
+      if (correctCount >= 4) {
+        // porque já foi incrementado acima (se acerto) -> >=4 + esse -> >=5 tratado antes,
+        // chegamos aqui só se não bateu 5 ainda; considerar vitória parcial
+        setShowVictoryScreen(true);
+        setShowQuiz(false);
+      } else {
+        // caso contrário, mostrar derrota (ou voltar ao inicio)
+        setShowDefeatScreen(true);
+        setShowQuiz(false);
+      }
       return;
     }
 
     setQuizStep((v) => v + 1);
   };
 
+  // Telas internas: Victory / Defeat (estilo parecido com seu layout)
+  const VictoryScreen = () => (
+    <View style={[styles.centeredContainer, { backgroundColor: colors.bg }]}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <Text style={[styles.victoryTitle, { color: colors.text }]}>Parabéns!</Text>
+        <Image source={require('../assets/images/htmlboss.png')} style={styles.victoryImage} />
+        <Text style={[styles.victoryText, { color: colors.text }]}>Você derrotou o MiniBoss HTML!</Text>
+
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              // volta ao menu principal
+              router.push('/');
+            }}
+          >
+            <Text style={styles.actionText}>Voltar ao menu</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.ghostButton]}
+            onPress={() => {
+              // recomeçar o mesmo mini-boss
+              resetQuizState();
+              setShowQuiz(true);
+            }}
+          >
+            <Text style={[styles.actionTextPrimary]}>Recomeçar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  const DefeatScreen = () => (
+    <View style={[styles.centeredContainer, { backgroundColor: colors.bg }]}>
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <Text style={[styles.defeatTitle, { color: colors.text }]}>Quase lá...</Text>
+        <Image source={require('../assets/images/htmlboss.png')} style={styles.defeatImage} />
+        <Text style={[styles.defeatText, { color: colors.text }]}>Você ficou sem vidas. Mas não desista — tente novamente!</Text>
+
+        <View style={styles.row}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            onPress={() => {
+              restartQuizFromDefeat();
+            }}
+          >
+            <Text style={styles.actionText}>Recomeçar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.ghostButton]}
+            onPress={() => {
+              resetQuizState();
+              router.push('/');
+            }}
+          >
+            <Text style={[styles.actionTextPrimary]}>Voltar ao menu</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
+  // Render principal
+  if (showVictoryScreen) return <VictoryScreen />;
+  if (showDefeatScreen) return <DefeatScreen />;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {!showQuiz ? (
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          
           <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.card }]} onPress={() => router.back()}>
             <Text style={[styles.closeX, { color: colors.text }]}>✕</Text>
           </TouchableOpacity>
 
           <View style={styles.topRow}>
             <View style={styles.heartsRow}>
-              {[0,1,2,3,4].map((i) => (
+              {[0, 1, 2, 3, 4].map((i) => (
                 <Image key={i} source={require('../assets/images/heart.png')} style={styles.heartImage} />
               ))}
             </View>
@@ -201,9 +246,7 @@ export default function HtmlMiniBoss() {
               <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
                 <View style={[styles.progressFill, { width: `${currentSlide.progress}%` }]} />
               </View>
-              <Text style={[styles.progressText, { color: colors.text }]}>
-                {currentSlide.progress}%
-              </Text>
+              <Text style={[styles.progressText, { color: colors.text }]}>{currentSlide.progress}%</Text>
             </View>
           </View>
 
@@ -235,7 +278,9 @@ export default function HtmlMiniBoss() {
                     </View>
                     <View style={styles.itemsDisplay}>
                       {list.items.map((item, i) => (
-                        <Text key={i} style={[styles.listItem, { color: colors.text }]}>{item}</Text>
+                        <Text key={i} style={[styles.listItem, { color: colors.text }]}>
+                          {item}
+                        </Text>
                       ))}
                     </View>
                   </View>
@@ -250,16 +295,12 @@ export default function HtmlMiniBoss() {
 
           <View style={styles.footerSpace} />
 
-          <TouchableOpacity
-            style={[styles.continueButton, { backgroundColor: colors.primary }]}
-            onPress={handleContinue}
-          >
+          <TouchableOpacity style={[styles.continueButton, { backgroundColor: colors.primary }]} onPress={handleContinue}>
             <Text style={styles.continueText}>CONTINUAR ➜</Text>
           </TouchableOpacity>
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.quizScroll} showsVerticalScrollIndicator={false}>
-          
           <TouchableOpacity style={[styles.closeButton, { backgroundColor: colors.card }]} onPress={() => router.back()}>
             <Text style={[styles.closeX, { color: colors.text }]}>✕</Text>
           </TouchableOpacity>
@@ -274,9 +315,7 @@ export default function HtmlMiniBoss() {
           </View>
 
           <View style={[styles.questionBubble, { borderColor: '#21421f', backgroundColor: colors.card }]}>
-            <Text style={[styles.questionBubbleText, { color: colors.text }]}>
-              {currentQuestion.question}
-            </Text>
+            <Text style={[styles.questionBubbleText, { color: colors.text }]}>{currentQuestion.question}</Text>
           </View>
 
           <View style={styles.bossWrap}>
@@ -284,13 +323,18 @@ export default function HtmlMiniBoss() {
           </View>
 
           <View style={styles.playerHeartsContainer}>
-            {[0,1,2,3,4].map((i) => (
+            {[0, 1, 2, 3, 4].map((i) => (
               <Image
                 key={i}
-                source={ i < playerLives ? require('../assets/images/heart.png') : require('../assets/images/brokenheart.png') }
+                source={i < playerLives ? require('../assets/images/heart.png') : require('../assets/images/brokenheart.png')}
                 style={styles.heartImage}
               />
             ))}
+          </View>
+
+          <View style={styles.progressCounters}>
+            <Text style={[styles.counterText, { color: colors.text }]}>Acertos: {correctCount}</Text>
+            <Text style={[styles.counterText, { color: colors.text }]}>Erros: {wrongCount}</Text>
           </View>
 
           <View style={styles.optionsContainer}>
@@ -306,14 +350,7 @@ export default function HtmlMiniBoss() {
                 ]}
                 onPress={() => setSelectedAnswer(index)}
               >
-                <Text
-                  style={[
-                    styles.optionText,
-                    { color: selectedAnswer === index ? '#fff' : colors.text },
-                  ]}
-                >
-                  {option.text}
-                </Text>
+                <Text style={[styles.optionText, { color: selectedAnswer === index ? '#fff' : colors.text }]}>{option.text}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -321,18 +358,12 @@ export default function HtmlMiniBoss() {
           <View style={styles.footerSpace} />
 
           <TouchableOpacity
-            style={[
-              styles.continueButton,
-              { backgroundColor: selectedAnswer !== null ? colors.primary : colors.border },
-            ]}
+            style={[styles.continueButton, { backgroundColor: selectedAnswer !== null ? colors.primary : colors.border }]}
             onPress={handleAnswerSubmit}
             disabled={selectedAnswer === null}
           >
-            <Text style={[styles.continueText, { color: selectedAnswer !== null ? '#fff' : colors.secondaryText }]}>
-              CONFIRMAR ➜
-            </Text>
+            <Text style={[styles.continueText, { color: selectedAnswer !== null ? '#fff' : colors.secondaryText }]}>CONFIRMAR ➜</Text>
           </TouchableOpacity>
-
         </ScrollView>
       )}
     </View>
@@ -352,7 +383,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
   },
   closeX: { fontSize: 20 },
   topRow: { marginTop: 60, width: '100%', alignItems: 'center' },
@@ -384,7 +415,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
-    elevation: 3
+    elevation: 3,
   },
   continueText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 
@@ -401,4 +432,24 @@ const styles = StyleSheet.create({
   optionButton: { width: '100%', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
   optionText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
   playerHeartsContainer: { flexDirection: 'row', gap: 6, marginBottom: 20, justifyContent: 'center' },
+
+  /* victory/defeat */
+  centeredContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  card: { width: '100%', borderRadius: 16, padding: 22, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, elevation: 4 },
+  victoryTitle: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  victoryImage: { width: 140, height: 140, resizeMode: 'contain', marginVertical: 8 },
+  victoryText: { fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' },
+
+  defeatTitle: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
+  defeatImage: { width: 140, height: 140, resizeMode: 'contain', marginVertical: 8 },
+  defeatText: { fontSize: 16, fontWeight: '600', marginTop: 8, textAlign: 'center' },
+
+  row: { flexDirection: 'row', width: '100%', justifyContent: 'space-around', marginTop: 18 },
+  actionButton: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, minWidth: 140, alignItems: 'center' },
+  actionText: { color: '#fff', fontWeight: '700' },
+  ghostButton: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, minWidth: 140, alignItems: 'center' },
+  actionTextPrimary: { color: '#2a9d5b', fontWeight: '700' },
+
+  progressCounters: { flexDirection: 'row', gap: 12, marginBottom: 12, marginTop: 6 },
+  counterText: { fontSize: 13, fontWeight: '600' },
 });
