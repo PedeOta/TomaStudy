@@ -372,19 +372,31 @@ const styles = StyleSheet.create({
   bossWrap: { marginTop: 26, alignItems: 'center', width: '100%' },
   bossImage: { width: 200, height: 200, resizeMode: 'contain' },
   footerSpace: { height: 40 },
-  continueButton: {
-    width: '80%',
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    elevation: 3,
-  },
-  continueText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+ continueButton: {
+  width: '60%',
+  height: 54,
+  borderRadius: 40,
+  alignSelf: 'flex-end',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: 0,
+
+  backgroundColor: '#55D838',      // verde igual ao da imagem
+  borderWidth: 3,
+  borderColor: '#D9D9D9',          // cinza do contorno
+
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.18,
+  shadowRadius: 6,
+  elevation: 5,
+},
+continueText: {
+  color: '#FFFFFF',
+  fontWeight: '800',
+  fontSize: 15,
+},
+
 
   quizHeader: { marginTop: 18, width: '100%', gap: 12, marginBottom: 20 },
   healthBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
