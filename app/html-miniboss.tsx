@@ -60,11 +60,9 @@ export default function HtmlMiniBoss() {
   const [bossHealth, setBossHealth] = useState<number>(100);
   const [playerLives, setPlayerLives] = useState<number>(5);
 
-  // Novos contadores para ativar telas de vitória/derrota
   const [correctCount, setCorrectCount] = useState<number>(0);
   const [wrongCount, setWrongCount] = useState<number>(0);
 
-  // Controle interno de telas (já que você escolheu opção B)
   const [showVictoryScreen, setShowVictoryScreen] = useState<boolean>(false);
   const [showDefeatScreen, setShowDefeatScreen] = useState<boolean>(false);
 
@@ -84,18 +82,6 @@ export default function HtmlMiniBoss() {
     setShowDefeatScreen(false);
   };
 
-  const restartQuizFromDefeat = () => {
-    // reinicia apenas o quiz (mantém tela atual do app)
-    setShowQuiz(true);
-    setQuizStep(0);
-    setBossHealth(100);
-    setPlayerLives(5);
-    setCorrectCount(0);
-    setWrongCount(0);
-    setSelectedAnswer(null);
-    setShowDefeatScreen(false);
-  };
-
   const handleContinue = () => {
     if (step < SLIDES.length - 1) setStep(step + 1);
     else setShowQuiz(true);
@@ -107,29 +93,24 @@ export default function HtmlMiniBoss() {
     const isCorrect = currentQuestion.options[selectedAnswer].correct;
 
     if (isCorrect) {
-      // acerto
       const newBossHealth = Math.max(0, bossHealth - 20);
       setBossHealth(newBossHealth);
 
       const newCorrect = correctCount + 1;
       setCorrectCount(newCorrect);
 
-      // Verifica condição de vitória por contagem
       if (newCorrect >= 5 || newBossHealth <= 0) {
-        // abre tela de vitória
         setShowVictoryScreen(true);
         setShowQuiz(false);
         return;
       }
     } else {
-      // erro
       const newLives = Math.max(0, playerLives - 1);
       setPlayerLives(newLives);
 
       const newWrong = wrongCount + 1;
       setWrongCount(newWrong);
 
-      // Verifica condição de derrota por contagem
       if (newWrong >= 5 || newLives <= 0) {
         setShowDefeatScreen(true);
         setShowQuiz(false);
@@ -137,18 +118,13 @@ export default function HtmlMiniBoss() {
       }
     }
 
-    // prepara próxima pergunta
     setSelectedAnswer(null);
 
     if (quizStep + 1 >= QUIZ_QUESTIONS.length) {
-      // acabou as perguntas — considerar vitória se player tiver mais acertos
       if (correctCount >= 4) {
-        // porque já foi incrementado acima (se acerto) -> >=4 + esse -> >=5 tratado antes,
-        // chegamos aqui só se não bateu 5 ainda; considerar vitória parcial
         setShowVictoryScreen(true);
         setShowQuiz(false);
       } else {
-        // caso contrário, mostrar derrota (ou voltar ao inicio)
         setShowDefeatScreen(true);
         setShowQuiz(false);
       }
@@ -158,7 +134,6 @@ export default function HtmlMiniBoss() {
     setQuizStep((v) => v + 1);
   };
 
-  // Telas internas: Victory / Defeat (estilo parecido com seu layout)
   const VictoryScreen = () => (
     <View style={[styles.centeredContainer, { backgroundColor: colors.bg }]}>
       <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -170,60 +145,55 @@ export default function HtmlMiniBoss() {
           <TouchableOpacity
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={() => {
-              // volta ao menu principal
               router.push('/');
             }}
           >
             <Text style={styles.actionText}>Voltar ao menu</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.ghostButton]}
-            onPress={() => {
-              // recomeçar o mesmo mini-boss
-              resetQuizState();
-              setShowQuiz(true);
-            }}
-          >
-            <Text style={[styles.actionTextPrimary]}>Recomeçar</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </View>
   );
 
-  const DefeatScreen = () => (
-    <View style={[styles.centeredContainer, { backgroundColor: colors.bg }]}>
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <Text style={[styles.defeatTitle, { color: colors.text }]}>Quase lá...</Text>
-        <Image source={require('../assets/images/htmlboss.png')} style={styles.defeatImage} />
-        <Text style={[styles.defeatText, { color: colors.text }]}>Você ficou sem vidas. Mas não desista — tente novamente!</Text>
+ const DefeatScreen = () => (
+  <View style={[styles.centeredContainer, { backgroundColor: colors.bg }]}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <Text style={[styles.defeatTitle, { color: colors.text }]}>Quase lá...</Text>
+      <Image source={require('../assets/images/htmlboss.png')} style={styles.defeatImage} />
+      <Text style={[styles.defeatText, { color: colors.text }]}>
+        Você ficou sem vidas. Mas não desista — tente novamente!
+      </Text>
 
-        <View style={styles.row}>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.primary }]}
-            onPress={() => {
-              restartQuizFromDefeat();
-            }}
-          >
-            <Text style={styles.actionText}>Recomeçar</Text>
-          </TouchableOpacity>
+      <View style={styles.row}>
 
-          <TouchableOpacity
-            style={[styles.ghostButton]}
-            onPress={() => {
-              resetQuizState();
-              router.push('/');
-            }}
-          >
-            <Text style={[styles.actionTextPrimary]}>Voltar ao menu</Text>
-          </TouchableOpacity>
-        </View>
+        {/* BOTÃO RECOMEÇAR VOLTOU */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: colors.primary }]}
+          onPress={() => {
+            // reinicia TUDO desde o começo da lição
+            resetQuizState();
+          }}
+        >
+          <Text style={styles.actionText}>Recomeçar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.ghostButton]}
+          onPress={() => {
+            resetQuizState();
+            router.push('/');
+          }}
+        >
+          <Text style={[styles.actionTextPrimary]}>Voltar ao menu</Text>
+        </TouchableOpacity>
+
       </View>
-    </View>
-  );
 
-  // Render principal
+    </View>
+  </View>
+);
+
+
   if (showVictoryScreen) return <VictoryScreen />;
   if (showDefeatScreen) return <DefeatScreen />;
 
@@ -332,10 +302,7 @@ export default function HtmlMiniBoss() {
             ))}
           </View>
 
-          <View style={styles.progressCounters}>
-            <Text style={[styles.counterText, { color: colors.text }]}>Acertos: {correctCount}</Text>
-            <Text style={[styles.counterText, { color: colors.text }]}>Erros: {wrongCount}</Text>
-          </View>
+          {/* REMOVIDO: ACERTOS / ERROS */}
 
           <View style={styles.optionsContainer}>
             {currentQuestion.options.map((option, index) => (
@@ -419,7 +386,6 @@ const styles = StyleSheet.create({
   },
   continueText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 
-  /* QUIZ */
   quizHeader: { marginTop: 18, width: '100%', gap: 12, marginBottom: 20 },
   healthBarContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   healthBarBg: { flex: 1, height: 20, borderRadius: 10, overflow: 'hidden' },
@@ -433,7 +399,6 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
   playerHeartsContainer: { flexDirection: 'row', gap: 6, marginBottom: 20, justifyContent: 'center' },
 
-  /* victory/defeat */
   centeredContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   card: { width: '100%', borderRadius: 16, padding: 22, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, elevation: 4 },
   victoryTitle: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
@@ -449,7 +414,4 @@ const styles = StyleSheet.create({
   actionText: { color: '#fff', fontWeight: '700' },
   ghostButton: { paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, minWidth: 140, alignItems: 'center' },
   actionTextPrimary: { color: '#2a9d5b', fontWeight: '700' },
-
-  progressCounters: { flexDirection: 'row', gap: 12, marginBottom: 12, marginTop: 6 },
-  counterText: { fontSize: 13, fontWeight: '600' },
 });
