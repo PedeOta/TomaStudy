@@ -16,11 +16,22 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          
+          {/* ROTA INICIAL */}
+          <Stack.Screen name="index" />
+
+          {/* LOGIN */}
+          <Stack.Screen name="loginScreen" />
+
+          {/* SUAS ABAS */}
+          <Stack.Screen name="(tabs)" />
+
+          {/* OUTRAS TELAS */}
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           <Stack.Screen name="trilhas" options={{ presentation: 'card', title: 'Trilhas' }} />
         </Stack>
+
         <StatusBar style="auto" />
       </NavigationThemeProvider>
     </ThemeProvider>
