@@ -105,9 +105,10 @@ export default function LoginScreen() {
             <Text style={styles.link}>Esqueceu a senha?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity>
-            <Text style={styles.link}>Primeiro acesso?</Text>
-          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/cadastro")}>
+  <Text style={styles.link}>Primeiro acesso?</Text>
+</TouchableOpacity>
+
         </View>
       </View>
     </ImageBackground>

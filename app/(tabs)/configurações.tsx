@@ -1,6 +1,17 @@
 import { useTheme } from '@/hooks/theme-context';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+  Alert
+} from 'react-native';
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 
 export default function ConfiguraçõesScreen() {
   const { isDarkMode, toggleTheme, colors } = useTheme();
@@ -8,21 +19,81 @@ export default function ConfiguraçõesScreen() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
 
+  const router = useRouter();
+
+  // -----------------------------------------------------
+  // LIMPAR TODOS OS DADOS LOCAIS (AsyncStorage)
+  // -----------------------------------------------------
+  const handleClearData = () => {
+    Alert.alert(
+      "Limpar dados",
+      "Tem certeza que deseja apagar todos os dados locais?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Limpar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              Alert.alert("Pronto!", "Todos os dados locais foram apagados.");
+            } catch (err) {
+              Alert.alert("Erro", "Não foi possível limpar os dados.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // -----------------------------------------------------
+  // LOGOUT REAL (remove token e volta para login)
+  // -----------------------------------------------------
+  const handleLogout = () => {
+    Alert.alert(
+      "Sair da Conta",
+      "Tem certeza que deseja fazer logout?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("userToken");
+              router.replace("/login"); // impede voltar para home
+            } catch (err) {
+              Alert.alert("Erro", "Não foi possível fazer logout.");
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <View style={[styles.header, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: colors.header, borderBottomColor: colors.border }
+        ]}
+      >
         <Text style={[styles.title, { color: colors.text }]}>⚙️ Configurações</Text>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* NOTIFICAÇÕES SECTION */}
-        <View style={styles.section}>
+
+        {/* NOTIFICAÇÕES */}
+        <View classnName={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>🔔 Notificações</Text>
 
           <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLabel}>
               <Text style={[styles.settingName, { color: colors.text }]}>Ativar Notificações</Text>
-              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>Receba notificações do app</Text>
+              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>
+                Receba notificações do app
+              </Text>
             </View>
             <Switch
               value={notificationsEnabled}
@@ -35,7 +106,9 @@ export default function ConfiguraçõesScreen() {
           <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLabel}>
               <Text style={[styles.settingName, { color: colors.text }]}>Sons</Text>
-              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>Ativar som das notificações</Text>
+              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>
+                Ativar som das notificações
+              </Text>
             </View>
             <Switch
               value={soundEnabled}
@@ -49,7 +122,9 @@ export default function ConfiguraçõesScreen() {
           <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLabel}>
               <Text style={[styles.settingName, { color: colors.text }]}>Vibração</Text>
-              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>Vibrar ao receber notificações</Text>
+              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>
+                Vibrar ao receber notificações
+              </Text>
             </View>
             <Switch
               value={vibrationEnabled}
@@ -61,14 +136,16 @@ export default function ConfiguraçõesScreen() {
           </View>
         </View>
 
-        {/* APARÊNCIA SECTION */}
+        {/* APARÊNCIA */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>🎨 Aparência</Text>
 
           <View style={[styles.settingItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingLabel}>
               <Text style={[styles.settingName, { color: colors.text }]}>Modo Escuro</Text>
-              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>Usar tema escuro</Text>
+              <Text style={[styles.settingDescription, { color: colors.secondaryText }]}>
+                Usar tema escuro
+              </Text>
             </View>
             <Switch
               value={isDarkMode}
@@ -79,7 +156,7 @@ export default function ConfiguraçõesScreen() {
           </View>
         </View>
 
-        {/* PRIVACIDADE SECTION */}
+        {/* PRIVACIDADE */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>🔒 Privacidade</Text>
 
@@ -91,12 +168,16 @@ export default function ConfiguraçõesScreen() {
             <Text style={[styles.optionText, { color: colors.text }]}>📄 Termos de Serviço</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.optionButton, { backgroundColor: colors.card }]}>
+          {/* LIMPAR DADOS */}
+          <TouchableOpacity
+            style={[styles.optionButton, { backgroundColor: colors.card }]}
+            onPress={handleClearData}
+          >
             <Text style={[styles.optionText, { color: colors.text }]}>🗑️ Limpar Dados Locais</Text>
           </TouchableOpacity>
         </View>
 
-        {/* SOBRE SECTION */}
+        {/* SOBRE */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>ℹ️ Sobre</Text>
 
@@ -109,15 +190,13 @@ export default function ConfiguraçõesScreen() {
             <Text style={[styles.infoLabel, { color: colors.text }]}>Desenvolvedor</Text>
             <Text style={[styles.infoValue, { color: colors.secondaryText }]}>TomaStudy Team</Text>
           </View>
-
-          <TouchableOpacity style={[styles.optionButton, { backgroundColor: colors.card }]}>
-            <Text style={[styles.optionText, { color: colors.text }]}>🔗 Visite nosso site</Text>
-          </TouchableOpacity>
         </View>
 
-        {/* AÇÃO PERIGOSA */}
+        {/* LOGOUT */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.dangerButton}>
+          <TouchableOpacity
+         
+          style={styles.dangerButton} onPress={handleLogout}>
             <Text style={styles.dangerButtonText}>🚪 Fazer Logout</Text>
           </TouchableOpacity>
         </View>
@@ -130,85 +209,66 @@ export default function ConfiguraçõesScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
+    flex: 1
   },
   header: {
     paddingHorizontal: 20,
     paddingTop: 15,
     paddingBottom: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#333',
+    fontWeight: '700'
   },
   content: {
     flex: 1,
     paddingHorizontal: 15,
-    paddingTop: 15,
+    paddingTop: 15
   },
   section: {
-    marginBottom: 25,
+    marginBottom: 25
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 12,
-    marginLeft: 5,
+    marginLeft: 5
   },
   settingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    elevation: 1
   },
   settingLabel: {
     flex: 1,
-    marginRight: 12,
+    marginRight: 12
   },
   settingName: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 3,
+    marginBottom: 3
   },
   settingDescription: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 12
   },
   optionButton: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    elevation: 1
   },
   optionText: {
     fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '500'
   },
   infoItem: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -216,20 +276,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
+    elevation: 1
   },
   infoLabel: {
     fontSize: 15,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '500'
   },
   infoValue: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 14
   },
   dangerButton: {
     backgroundColor: '#ff6b6b',
@@ -237,15 +291,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 3,
-    elevation: 3,
+    elevation: 2
   },
   dangerButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
-  },
+    color: '#fff'
+  }
 });
