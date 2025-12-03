@@ -6,21 +6,53 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 
+// 🔥 FIREBASE — CAMINHO 100% CORRETO
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../src/firebase";
+
 export default function CadastroScreen() {
-  const [nome, setNome] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [usuario, setUsuario] = useState<string>("");
-  const [senha, setSenha] = useState<string>("");
-  const [confirmarSenha, setConfirmarSenha] = useState<string>("");
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [usuario, setUsuario] = useState("");
+  const [senha, setSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
 
   const senhasIguais = senha.length > 0 && senha === confirmarSenha;
 
-  function handleCadastro() {
-    if (!senhasIguais) return;
-    router.replace("/"); // Redireciona depois do cadastro
+  async function handleCadastro() {
+    if (!senhasIguais) {
+      Alert.alert("Erro", "As senhas não coincidem.");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        senha
+      );
+
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "usuarios", user.uid), {
+        nome,
+        email,
+        usuario,
+        criadoEm: new Date(),
+      });
+
+      Alert.alert("Sucesso!", "Cadastro realizado com sucesso!");
+
+      router.replace("/(tabs)");
+
+    } catch (error: any) {
+      Alert.alert("Erro ao cadastrar", error.message);
+    }
   }
 
   return (
@@ -46,8 +78,8 @@ export default function CadastroScreen() {
             style={styles.input}
             placeholder="josemaria@gmail.com"
             placeholderTextColor="#777"
-            autoCapitalize="none"
             keyboardType="email-address"
+            autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
           />
@@ -60,7 +92,6 @@ export default function CadastroScreen() {
               placeholderTextColor="#777"
               value={usuario}
               onChangeText={setUsuario}
-              autoCapitalize="none"
             />
             {usuario.length > 0 && (
               <Text style={styles.disponivel}>disponível</Text>
@@ -116,9 +147,7 @@ export default function CadastroScreen() {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-  },
+  background: { flex: 1 },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
@@ -150,20 +179,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     color: "#000",
   },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  disponivel: {
-    color: "green",
-    marginLeft: 8,
-    fontWeight: "bold",
-  },
-  sucesso: {
-    color: "green",
-    marginLeft: 8,
-    fontSize: 12,
-  },
+  row: { flexDirection: "row", alignItems: "center" },
+  disponivel: { color: "green", marginLeft: 8, fontWeight: "bold" },
+  sucesso: { color: "green", marginLeft: 8, fontSize: 12 },
   cadastrarButton: {
     backgroundColor: "#006CFF",
     paddingVertical: 14,

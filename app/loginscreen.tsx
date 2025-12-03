@@ -1,14 +1,19 @@
-import { useState, useEffect } from "react";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
+  Image,
   ImageBackground,
-  View,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Image,
+  View,
+  Alert,
 } from "react-native";
-import { router } from "expo-router";
+
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../src/firebase"; // <-- IMPORT CORRETO
+
 import { useGoogleAuth, useFacebookAuth } from "../hooks/useOAuth";
 
 export default function LoginScreen() {
@@ -38,8 +43,21 @@ export default function LoginScreen() {
     }
   }, [facebook.response]);
 
-  function handleLogin() {
-    router.replace("/(tabs)");
+  async function handleLogin() {
+    if (usuario.trim() === "" || senha.trim() === "") {
+      Alert.alert("Erro", "Digite o e-mail e a senha.");
+      return;
+    }
+
+    try {
+      // Login Firebase
+      await signInWithEmailAndPassword(auth, usuario, senha);
+
+      router.replace("/(tabs)");
+    } catch (error: any) {
+      console.log("ERRO LOGIN:", error);
+      Alert.alert("Erro ao entrar", error.message);
+    }
   }
 
   return (
@@ -50,12 +68,15 @@ export default function LoginScreen() {
     >
       <View style={styles.centerContainer}>
         <View style={styles.card}>
+
           {/* USUÁRIO */}
-          <Text style={styles.label}>Usuário</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="@usuario"
+            placeholder="seuemail@gmail.com"
             placeholderTextColor="#777"
+            autoCapitalize="none"
+            keyboardType="email-address"
             value={usuario}
             onChangeText={setUsuario}
           />
@@ -77,10 +98,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* GOOGLE */}
-          <TouchableOpacity
-            style={styles.socialButton}
-            onPress={google.signIn}
-          >
+          <TouchableOpacity style={styles.socialButton} onPress={google.signIn}>
             <Image
               source={require("../assets/images/googleicon.png")}
               style={styles.socialIcon}
@@ -89,10 +107,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* FACEBOOK */}
-          <TouchableOpacity
-            style={styles.socialButton}
-            onPress={facebook.signIn}
-          >
+          <TouchableOpacity style={styles.socialButton} onPress={facebook.signIn}>
             <Image
               source={require("../assets/images/facebookicon.png")}
               style={styles.socialIcon}
@@ -101,13 +116,13 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           {/* LINKS */}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push("/esqueciasenha")}>
             <Text style={styles.link}>Esqueceu a senha?</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.push("/cadastro")}>
-  <Text style={styles.link}>Primeiro acesso?</Text>
-</TouchableOpacity>
+            <Text style={styles.link}>Primeiro acesso?</Text>
+          </TouchableOpacity>
 
         </View>
       </View>
