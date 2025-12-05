@@ -1,21 +1,17 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// CONFIG DO FIREBASE QUE O SITE TE DEU
 const firebaseConfig = {
-  apiKey: "AIzaSyCWPtTaAySVEV55sclM4ybHPktcRvFsnAg",
-  authDomain: "tomastudy-e7c9f.firebaseapp.com",
-  projectId: "tomastudy-e7c9f",
-  storageBucket: "tomastudy-e7c9f.firebasestorage.app",
-  messagingSenderId: "566381184194",
-  appId: "1:566381184194:web:223bbd124bb62a5b97675b",
-  measurementId: "G-G9G715XQ3Q",
+  apiKey: "AIzaSyDebwIg8ji7z13MPI9uMlNiD-_7XnFqQEQ",
+  authDomain: "tomastudy-ar2205.firebaseapp.com", // ✔ correto
+  projectId: "tomastudy-ar2205",
+  storageBucket: "tomastudy-ar2205.appspot.com", // ✔ correto
+  messagingSenderId: "491468208778",
+  appId: "1:491468208778:web:72cfc5d29d404c89b20b73"
 };
 
-// INICIALIZA O APP (SÓ UMA VEZ)
-const app = initializeApp(firebaseConfig);
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// SERVIÇOS
 export const auth = getAuth(app);
 export const db = getFirestore(app);
