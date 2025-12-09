@@ -1,10 +1,10 @@
+import { auth } from '@/src/firebase';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/src/firebase';
+import { useEffect, useState } from 'react';
+import 'react-native-reanimated';
 
 import { ThemeProvider } from '@/hooks/theme-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
