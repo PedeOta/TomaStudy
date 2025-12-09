@@ -1,8 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import TabIcon from '@/components/tab-icon';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -14,20 +13,53 @@ export default function TabLayout() {
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: '#ffffff',
+          borderTopColor: '#f0f0f0',
+          borderTopWidth: 1,
+          height: 84,
+          paddingTop: 8,
+          paddingBottom: 12,
+        },
       }}>
       <Tabs.Screen
-        name="index"
+        name="pomodoro"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              source={require('@/assets/images/iconepomodoro.png')}
+              size={60}
+              focused={focused}
+              style={{ marginTop: 4 }}
+            />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="index"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              source={require('@/assets/images/iconehome.png')}
+              size={60}
+              focused={focused}
+              style={{ marginTop: 4 }}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="configurações"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <TabIcon
+              source={require('@/assets/images/iconeconfigurações.png')}
+              size={60}
+              focused={focused}
+              style={{ marginTop: 4 }}
+            />
+          ),
         }}
       />
     </Tabs>

@@ -1,17 +1,17 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
-    ImageBackground,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    Alert,
+	Alert,
+	ImageBackground,
+	StyleSheet,
+	Text,
+	TextInput,
+	TouchableOpacity,
+	View,
 } from "react-native";
 
 import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../../src/firebase"; // <-- IMPORT DO FIREBASE
+import { auth } from "../src/firebase"; // <-- IMPORT DO FIREBASE
 
 export default function EsqueciSenha() {
 	const [identificador, setIdentificador] = useState("");
@@ -44,7 +44,7 @@ export default function EsqueciSenha() {
 
 	return (
 		<ImageBackground
-			source={require("../../assets/images/teladelogin.png")}
+			source={require("../assets/images/teladelogin.png")}
 			style={styles.background}
 			resizeMode="cover"
 		>
