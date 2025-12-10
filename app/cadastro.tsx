@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 
-// 🔥 FIREBASE — CAMINHO 100% CORRETO
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../src/firebase";
@@ -21,16 +20,35 @@ export default function CadastroScreen() {
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [carregando, setCarregando] = useState(false);
 
-  const senhasIguais = senha.length > 0 && senha === confirmarSenha;
+  const senhaValida = senha.length >= 6;
+  const confirmarSenhaValida = confirmarSenha.length >= 6;
+  const senhasIguais = senhaValida && confirmarSenhaValida && senha === confirmarSenha;
 
   async function handleCadastro() {
-    if (!senhasIguais) {
-      Alert.alert("Erro", "As senhas não coincidem.");
+    console.log("🔵 handleCadastro iniciado");
+
+    if (!nome || !email || !usuario || !senha || !confirmarSenha) {
+      Alert.alert("Atenção", "Preencha todos os campos.");
       return;
     }
 
+    if (!senhaValida) {
+      Alert.alert("Atenção", "A senha deve ter no mínimo 6 caracteres.");
+      return;
+    }
+
+    if (!senhasIguais) {
+      Alert.alert("Atenção", "As senhas não coincidem.");
+      return;
+    }
+
+    setCarregando(true);
+
     try {
+      console.log("🟡 Criando usuário no Firebase Auth...");
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email.trim(),
@@ -38,20 +56,35 @@ export default function CadastroScreen() {
       );
 
       const user = userCredential.user;
+      console.log("🟢 Usuário criado com UID:", user.uid);
 
-      await setDoc(doc(db, "usuarios", user.uid), {
+      // 🔥 Salvar no Firestore sem bloquear o fluxo
+      setDoc(doc(db, "usuarios", user.uid), {
         nome,
         email,
         usuario,
         criadoEm: new Date(),
-      });
+      })
+        .then(() => console.log("🟢 Dados salvos no Firestore"))
+        .catch((err) =>
+          console.log("⚠️ Erro ao salvar no Firestore (não bloqueou):", err)
+        );
 
-      Alert.alert("Sucesso!", "Cadastro realizado com sucesso!");
-
-      router.replace("/(tabs)");
+      console.log("🟣 Redirecionando para tela de login");
+      router.replace("/loginscreen");
 
     } catch (error: any) {
-      Alert.alert("Erro ao cadastrar", error.message);
+      console.log("❌ ERRO NO CADASTRO:", error);
+
+      let mensagemErro = "Erro ao cadastrar.";
+
+      if (error.code === "auth/email-already-in-use") {
+        mensagemErro = "Email já cadastrado!";
+      }
+
+      Alert.alert("Atenção", mensagemErro);
+    } finally {
+      setCarregando(false);
     }
   }
 
@@ -76,7 +109,7 @@ export default function CadastroScreen() {
           <Text style={styles.label}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="josemaria@gmail.com"
+            placeholder="exemplo@gmail.com"
             placeholderTextColor="#777"
             keyboardType="email-address"
             autoCapitalize="none"
@@ -88,7 +121,7 @@ export default function CadastroScreen() {
           <View style={styles.row}>
             <TextInput
               style={[styles.input, { flex: 1 }]}
-              placeholder="@josemaria1"
+              placeholder="@fulano123"
               placeholderTextColor="#777"
               value={usuario}
               onChangeText={setUsuario}
@@ -108,7 +141,10 @@ export default function CadastroScreen() {
               value={senha}
               onChangeText={setSenha}
             />
-            {senha.length > 0 && senhasIguais && (
+            {senha.length > 0 && !senhaValida && (
+              <Text style={styles.erro}>mínimo 6 caracteres</Text>
+            )}
+            {senhaValida && confirmarSenhaValida && senhasIguais && (
               <Text style={styles.sucesso}>as senhas são iguais</Text>
             )}
           </View>
@@ -123,17 +159,26 @@ export default function CadastroScreen() {
               value={confirmarSenha}
               onChangeText={setConfirmarSenha}
             />
-            {confirmarSenha.length > 0 && senhasIguais && (
+            {confirmarSenha.length > 0 && !confirmarSenhaValida && (
+              <Text style={styles.erro}>mínimo 6 caracteres</Text>
+            )}
+            {senhaValida && confirmarSenhaValida && senhasIguais && (
               <Text style={styles.sucesso}>as senhas são iguais</Text>
             )}
           </View>
 
+          {/* 🔥 Botão só habilita quando senha >=6 E senhas iguais */}
           <TouchableOpacity
-            style={[styles.cadastrarButton, !senhasIguais && { opacity: 0.6 }]}
-            disabled={!senhasIguais}
+            style={[
+              styles.cadastrarButton,
+              (!senhasIguais || !senhaValida || carregando) && { opacity: 0.5 },
+            ]}
+            disabled={!senhasIguais || !senhaValida || carregando}
             onPress={handleCadastro}
           >
-            <Text style={styles.cadastrarButtonText}>Cadastrar</Text>
+            <Text style={styles.cadastrarButtonText}>
+              {carregando ? "Cadastrando..." : "Cadastrar"}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.back()}>
@@ -182,6 +227,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center" },
   disponivel: { color: "green", marginLeft: 8, fontWeight: "bold" },
   sucesso: { color: "green", marginLeft: 8, fontSize: 12 },
+  erro: { color: "red", marginLeft: 8, fontSize: 12 },
   cadastrarButton: {
     backgroundColor: "#006CFF",
     paddingVertical: 14,
