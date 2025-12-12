@@ -1,23 +1,40 @@
 import { useTheme } from '@/hooks/theme-context';
+import { useUser } from '@/hooks/user-context';
 import { useRouter } from 'expo-router';
+import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function App() {
   const { colors } = useTheme();
   const router = useRouter();
+  const user = useUser();
+
+  // Agora NÃO existe mais fallback "Arthur"
+  const displayName =
+    user?.nome ||
+    (user?.email ? user.email.split('@')[0] : null) ||
+    user?.uid ||
+    null;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+
       {/* HEADER */}
       <View style={[styles.header, { backgroundColor: colors.bg }]}>
         <View style={styles.headerTop}>
           <Image
-            source={{ uri: "https://i.imgur.com/6VBx3io.png" }} // imagem de perfil genérica
+            source={{ uri: "https://i.imgur.com/6VBx3io.png" }}
             style={styles.avatar}
           />
           <View>
-            <Text style={[styles.welcome, { color: colors.text }]}>Olá, Arthur!</Text>
-            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Pronto pra iniciar sua jornada na programação?</Text>
+            <Text style={[styles.welcome, { color: colors.text }]}>
+              {displayName ? `Olá, ${displayName}!` : "Carregando usuário..."}
+            </Text>
+
+            {/* Subtítulo */}
+            <Text style={[styles.subtitle, { color: colors.secondaryText }]}>
+              Pronto pra iniciar sua jornada na programação?
+            </Text>
           </View>
         </View>
 
@@ -42,14 +59,18 @@ export default function App() {
 
       {/* MAIN */}
       <ScrollView contentContainerStyle={styles.main}>
-        {/* HTML card with Play button overlay - LEFT */}
+
+        {/* HTML card LEFT */}
         <View style={[styles.cardRow, { justifyContent: 'flex-start' }]}>
           <View style={styles.cardWithButton}>
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Image source={require("../../assets/images/html.png")} style={styles.iconMain} />
             </View>
-            {/* Play button overlay */}
-            <TouchableOpacity style={styles.playButtonOverlay} onPress={() => router.push('/html-miniboss')}>
+
+            <TouchableOpacity
+              style={styles.playButtonOverlay}
+              onPress={() => router.push('/html-miniboss')}
+            >
               <View style={styles.playCircle}>
                 <Text style={styles.playSymbol}>{'\u25B6'}</Text>
               </View>
@@ -57,26 +78,27 @@ export default function App() {
           </View>
         </View>
 
-        {/* JS card - RIGHT */}
+        {/* JS card RIGHT */}
         <View style={[styles.cardRow, { justifyContent: 'flex-end' }]}>
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Image source={require("../../assets/images/js.png")} style={styles.iconMain} />
           </View>
         </View>
 
-        {/* Python card - LEFT */}
+        {/* Python card LEFT */}
         <View style={[styles.cardRow, { justifyContent: 'flex-start' }]}>
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Image source={require("../../assets/images/python.png")} style={styles.iconMain} />
           </View>
         </View>
 
-        {/* CSS card - RIGHT */}
+        {/* CSS card RIGHT */}
         <View style={[styles.cardRow, { justifyContent: 'flex-end' }]}>
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Image source={require("../../assets/images/css.png")} style={styles.iconMain} />
           </View>
         </View>
+
       </ScrollView>
     </View>
   );
@@ -105,13 +127,14 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   welcome: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
   },
   subtitle: {
     fontSize: 12,
-    color: "#666",
+    marginTop: 2,
   },
+
   statsRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -170,8 +193,6 @@ const styles = StyleSheet.create({
     right: -10,
     zIndex: 10,
   },
-
-  // PLAY BUTTON (agora é overlay)
   playCircle: {
     width: 70,
     height: 70,
@@ -189,7 +210,4 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginLeft: 4,
   },
-
-  // LOCKED LESSONS - Removido
-  
 });

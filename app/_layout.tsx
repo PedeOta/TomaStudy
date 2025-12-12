@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { ThemeProvider } from '@/hooks/theme-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { UserProvider } from '@/hooks/user-context';
 
 export const unstable_settings = {
   anchor: 'loginscreen',
@@ -33,7 +34,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
+        <UserProvider>
+          <Stack screenOptions={{ headerShown: false }}>
           {isLoggedIn ? (
             <>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -48,7 +50,8 @@ export default function RootLayout() {
               <Stack.Screen name="esqueciasenha" options={{ headerShown: false }} />
             </>
           )}
-        </Stack>
+          </Stack>
+        </UserProvider>
         <StatusBar style="auto" />
       </NavigationThemeProvider>
     </ThemeProvider>
