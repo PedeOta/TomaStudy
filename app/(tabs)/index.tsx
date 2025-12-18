@@ -9,7 +9,7 @@ export default function App() {
   const router = useRouter();
   const user = useUser();
 
-  // Agora NÃO existe mais fallback "Arthur"
+
   const displayName =
     user?.nome ||
     (user?.email ? user.email.split('@')[0] : null) ||

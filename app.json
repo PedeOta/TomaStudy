@@ -4,17 +4,13 @@
     "slug": "tomastudy",
     "version": "1.0.0",
     "orientation": "portrait",
-
     "icon": "./assets/images/telasplash.png",
-
     "scheme": "tomastudy",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true
     },
-
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -26,30 +22,32 @@
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.TomaStudy"
     },
-
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
-
     "plugins": [
       "expo-router",
-
-     [
-  "expo-splash-screen",
-  {
-    "image": "./assets/images/telasplash.png",
-    "resizeMode": "cover",
-    "backgroundColor": "#ffffff"
-  }
-],
-
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/telasplash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#ffffff"
+        }
+      ],
       "expo-web-browser"
     ],
-
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "677b45cb-381e-4104-9144-68216f8d6301"
+      }
+    },
+    "owner": "arthurtomastudy"
   }
 }
